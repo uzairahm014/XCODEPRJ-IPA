@@ -1,0 +1,19 @@
+#!/bin/zsh
+set -euo pipefail
+mkdir -p diagnostics
+swift_version="$(swift --version 2>&1 | head -n 1)"
+xcode_path="$(xcode-select -p 2>&1 || true)"
+arch="$(uname -m)"
+cat > diagnostics/report.md <<EOF
+# Diagnostics report
+
+Generated: $(date -u '+%Y-%m-%dT%H:%M:%SZ')
+
+- Architecture: ${arch}
+- Swift: ${swift_version}
+- Xcode path: ${xcode_path}
+- Package dependency status: no external dependencies configured
+- System-level integration: unavailable unless a verified supported environment is detected
+EOF
+swift build >> diagnostics/report.md 2>&1
+echo "Wrote diagnostics/report.md"

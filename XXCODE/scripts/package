@@ -1,0 +1,7 @@
+#!/bin/zsh
+set -euo pipefail
+mkdir -p outputs
+swift build
+archive="outputs/IslandPlatform-$(date -u '+%Y%m%dT%H%M%SZ').tar.gz"
+tar -czf "$archive" --exclude=.build --exclude=.git .
+echo "$archive"
