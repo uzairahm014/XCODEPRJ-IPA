@@ -1,0 +1,54 @@
+name: Build Unsigned IPA
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find Xcode project
+        run: |
+          find . -name "*.xcodeproj" -maxdepth 3 -print
+          find . -name "*.xcworkspace" -maxdepth 3 -print
+
+      - name: Show schemes
+        run: |
+          PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -1)
+          xcodebuild -project "$PROJECT" -list
+
+      - name: Build unsigned app
+        run: |
+          PROJECT=$(find . -name "*.xcodeproj" -maxdepth 3 | head -1)
+
+          xcodebuild \
+            -project "$PROJECT" \
+            -scheme "IslandPlatform" \
+            -sdk iphoneos \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
+
+      - name: Package IPA
+        run: |
+          APP=$(find build/Build/Products/Release-iphoneos \
+            -maxdepth 1 \
+            -name "*.app" \
+            -print -quit)
+
+          mkdir -p Payload
+          cp -R "$APP" Payload/
+
+          zip -r IslandPlatform-unsigned.ipa Payload
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: IslandPlatform-unsigned-IPA
+          path: IslandPlatform-unsigned.ipa
